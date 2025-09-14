@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import FileUploader from './FileUploader';
 import './HamburgerMenu.css';
 
-const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoomReset, timelineVerticalZoom, onTimelineVerticalZoomIn, onTimelineVerticalZoomOut, onTimelineVerticalZoomReset, effortZoomLevel, onEffortZoomIn, onEffortZoomOut, onEffortZoomReset, effortHorizontalZoom, onEffortHorizontalZoomIn, onEffortHorizontalZoomOut, onEffortHorizontalZoomReset }) => {
+const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoomReset, timelineVerticalZoom, onTimelineVerticalZoomIn, onTimelineVerticalZoomOut, onTimelineVerticalZoomReset, effortZoomLevel, onEffortZoomIn, onEffortZoomOut, onEffortZoomReset, effortHorizontalZoom, onEffortHorizontalZoomIn, onEffortHorizontalZoomOut, onEffortHorizontalZoomReset, clipFontSize, onFontSizeIncrease, onFontSizeDecrease, onFontSizeReset }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -135,6 +135,26 @@ const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoom
               <div className="menu-section">
                 <h4>Tools</h4>
                 <p className="menu-placeholder">More tools coming soon...</p>
+              </div>
+              
+              <div className="menu-section">
+                <h4>Clip Font Size</h4>
+                <div className="zoom-controls">
+                  <button onClick={onFontSizeDecrease} className="zoom-btn" title="Decrease font size">
+                    A-
+                  </button>
+                  <span className="zoom-level">{clipFontSize}px</span>
+                  <button onClick={onFontSizeIncrease} className="zoom-btn" title="Increase font size">
+                    A+
+                  </button>
+                  <button onClick={onFontSizeReset} className="zoom-reset-btn" title="Reset font size">
+                    Reset
+                  </button>
+                </div>
+                <div className="keyboard-shortcuts">
+                  <span className="shortcut-hint">Shortcuts:</span>
+                  <span className="key">-</span> <span className="key">+</span>
+                </div>
               </div>
               
               <div className="menu-section">

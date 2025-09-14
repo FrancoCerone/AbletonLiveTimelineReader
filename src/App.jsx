@@ -21,6 +21,12 @@ function App() {
   const [timelineVerticalZoom, setTimelineVerticalZoom] = useState(savedZoomValues.timelineVerticalZoom);
   const [effortZoomLevel, setEffortZoomLevel] = useState(savedZoomValues.effortZoomLevel);
   const [effortHorizontalZoom, setEffortHorizontalZoom] = useState(savedZoomValues.effortHorizontalZoom);
+  
+  // Font size state with localStorage persistence
+  const [clipFontSize, setClipFontSize] = useState(() => {
+    const saved = localStorage.getItem('clipFontSize');
+    return saved ? parseInt(saved) : 24; // Default to 24px
+  });
 
   const handleFileProcessed = (xml, fileName = '') => {
     setXmlContent(xml);
@@ -67,6 +73,24 @@ function App() {
   
   const handleTimelineVerticalZoomReset = () => {
     setTimelineVerticalZoom(1);
+  };
+
+  // Font size controls
+  const handleFontSizeIncrease = () => {
+    const newSize = Math.min(clipFontSize + 4, 48); // Max 48px
+    setClipFontSize(newSize);
+    localStorage.setItem('clipFontSize', newSize.toString());
+  };
+
+  const handleFontSizeDecrease = () => {
+    const newSize = Math.max(clipFontSize - 4, 8); // Min 8px
+    setClipFontSize(newSize);
+    localStorage.setItem('clipFontSize', newSize.toString());
+  };
+
+  const handleFontSizeReset = () => {
+    setClipFontSize(24);
+    localStorage.setItem('clipFontSize', '24');
   };
 
   // Effort chart zoom functions
@@ -176,6 +200,15 @@ function App() {
           event.preventDefault();
           handleEffortHorizontalZoomIn();
           break;
+        case '-':
+          event.preventDefault();
+          handleFontSizeDecrease();
+          break;
+        case '+':
+        case '=':
+          event.preventDefault();
+          handleFontSizeIncrease();
+          break;
         default:
           break;
       }
@@ -211,6 +244,10 @@ function App() {
         onEffortHorizontalZoomIn={handleEffortHorizontalZoomIn}
         onEffortHorizontalZoomOut={handleEffortHorizontalZoomOut}
         onEffortHorizontalZoomReset={handleEffortHorizontalZoomReset}
+        clipFontSize={clipFontSize}
+        onFontSizeIncrease={handleFontSizeIncrease}
+        onFontSizeDecrease={handleFontSizeDecrease}
+        onFontSizeReset={handleFontSizeReset}
       />
       
       {/* Auto-loading indicator */}
@@ -249,7 +286,7 @@ function App() {
         {clips.length > 0 ? (
           <>
             <div className="timeline-container">
-              <Timeline clips={clips} zoomLevel={zoomLevel} verticalZoom={timelineVerticalZoom} />
+              <Timeline clips={clips} zoomLevel={zoomLevel} verticalZoom={timelineVerticalZoom} clipFontSize={clipFontSize} />
             </div>
             <EffortAnalysis clips={clips} zoomLevel={effortZoomLevel} horizontalZoom={effortHorizontalZoom} />
           </>
