@@ -27,6 +27,12 @@ function App() {
     const saved = localStorage.getItem('clipFontSize');
     return saved ? parseInt(saved) : 24; // Default to 24px
   });
+  
+  // Histogram granularity state with localStorage persistence
+  const [histogramGranularity, setHistogramGranularity] = useState(() => {
+    const saved = localStorage.getItem('histogramGranularity');
+    return saved ? parseFloat(saved) : 2.0; // Default to 2 seconds per bar
+  });
 
   const handleFileProcessed = (xml, fileName = '') => {
     setXmlContent(xml);
@@ -48,7 +54,7 @@ function App() {
 
   // Zoom functions
   const minZoom = 0.1;
-  const maxZoom = 5;
+  const maxZoom = 10;
 
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev * 1.2, maxZoom));
@@ -119,6 +125,19 @@ function App() {
     setEffortHorizontalZoom(1);
   };
 
+  // Histogram granularity functions
+  const handleGranularityIncrease = () => {
+    setHistogramGranularity(prev => Math.min(prev + 0.5, 10.0)); // Max 10 seconds per bar
+  };
+  
+  const handleGranularityDecrease = () => {
+    setHistogramGranularity(prev => Math.max(prev - 0.5, 0.5)); // Min 0.5 seconds per bar
+  };
+  
+  const handleGranularityReset = () => {
+    setHistogramGranularity(2.0); // Default 2 seconds per bar
+  };
+
   const handleLoadMockData = () => {
     setXmlContent(mockXML);
     setClips(mockClips);
@@ -158,6 +177,16 @@ function App() {
       effortHorizontalZoom
     });
   }, [zoomLevel, timelineVerticalZoom, effortZoomLevel, effortHorizontalZoom]);
+
+  // Save font size to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('clipFontSize', clipFontSize.toString());
+  }, [clipFontSize]);
+
+  // Save histogram granularity to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('histogramGranularity', histogramGranularity.toString());
+  }, [histogramGranularity]);
 
   // Keyboard shortcuts for zoom
   useEffect(() => {
@@ -199,6 +228,14 @@ function App() {
         case 'm':
           event.preventDefault();
           handleEffortHorizontalZoomIn();
+          break;
+        case 'j':
+          event.preventDefault();
+          handleGranularityDecrease();
+          break;
+        case 'k':
+          event.preventDefault();
+          handleGranularityIncrease();
           break;
         case '-':
           event.preventDefault();
@@ -248,6 +285,10 @@ function App() {
         onFontSizeIncrease={handleFontSizeIncrease}
         onFontSizeDecrease={handleFontSizeDecrease}
         onFontSizeReset={handleFontSizeReset}
+        histogramGranularity={histogramGranularity}
+        onGranularityIncrease={handleGranularityIncrease}
+        onGranularityDecrease={handleGranularityDecrease}
+        onGranularityReset={handleGranularityReset}
       />
       
       {/* Auto-loading indicator */}
@@ -288,7 +329,7 @@ function App() {
             <div className="timeline-container">
               <Timeline clips={clips} zoomLevel={zoomLevel} verticalZoom={timelineVerticalZoom} clipFontSize={clipFontSize} />
             </div>
-            <EffortAnalysis clips={clips} zoomLevel={effortZoomLevel} horizontalZoom={effortHorizontalZoom} />
+            <EffortAnalysis clips={clips} zoomLevel={effortZoomLevel} horizontalZoom={effortHorizontalZoom} histogramGranularity={histogramGranularity} />
           </>
         ) : (
           <div className="welcome-screen">

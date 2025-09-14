@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import FileUploader from './FileUploader';
 import './HamburgerMenu.css';
 
-const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoomReset, timelineVerticalZoom, onTimelineVerticalZoomIn, onTimelineVerticalZoomOut, onTimelineVerticalZoomReset, effortZoomLevel, onEffortZoomIn, onEffortZoomOut, onEffortZoomReset, effortHorizontalZoom, onEffortHorizontalZoomIn, onEffortHorizontalZoomOut, onEffortHorizontalZoomReset, clipFontSize, onFontSizeIncrease, onFontSizeDecrease, onFontSizeReset }) => {
+const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoomReset, timelineVerticalZoom, onTimelineVerticalZoomIn, onTimelineVerticalZoomOut, onTimelineVerticalZoomReset, effortZoomLevel, onEffortZoomIn, onEffortZoomOut, onEffortZoomReset, effortHorizontalZoom, onEffortHorizontalZoomIn, onEffortHorizontalZoomOut, onEffortHorizontalZoomReset, clipFontSize, onFontSizeIncrease, onFontSizeDecrease, onFontSizeReset, histogramGranularity, onGranularityIncrease, onGranularityDecrease, onGranularityReset }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -51,7 +51,7 @@ const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoom
                     −
                   </button>
                   <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
-                  <button onClick={onZoomIn} className="zoom-btn" disabled={zoomLevel >= 5} title="Timeline Horizontal Zoom In (H)">
+                  <button onClick={onZoomIn} className="zoom-btn" disabled={zoomLevel >= 10} title="Timeline Horizontal Zoom In (H)">
                     +
                   </button>
                   <button onClick={onZoomReset} className="zoom-reset-btn" title="Reset Timeline Horizontal Zoom">
@@ -73,7 +73,7 @@ const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoom
                     −
                   </button>
                   <span className="zoom-level">{Math.round(timelineVerticalZoom * 100)}%</span>
-                  <button onClick={onTimelineVerticalZoomIn} className="zoom-btn" disabled={timelineVerticalZoom >= 5} title="Timeline Vertical Zoom In (F)">
+                  <button onClick={onTimelineVerticalZoomIn} className="zoom-btn" disabled={timelineVerticalZoom >= 10} title="Timeline Vertical Zoom In (F)">
                     +
                   </button>
                   <button onClick={onTimelineVerticalZoomReset} className="zoom-reset-btn" title="Reset Timeline Vertical Zoom">
@@ -95,7 +95,7 @@ const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoom
                     −
                   </button>
                   <span className="zoom-level">{Math.round(effortZoomLevel * 100)}%</span>
-                  <button onClick={onEffortZoomIn} className="zoom-btn" disabled={effortZoomLevel >= 5} title="Effort Vertical Zoom In (B)">
+                  <button onClick={onEffortZoomIn} className="zoom-btn" disabled={effortZoomLevel >= 10} title="Effort Vertical Zoom In (B)">
                     +
                   </button>
                   <button onClick={onEffortZoomReset} className="zoom-reset-btn" title="Reset Effort Vertical Zoom">
@@ -117,7 +117,7 @@ const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoom
                     −
                   </button>
                   <span className="zoom-level">{Math.round(effortHorizontalZoom * 100)}%</span>
-                  <button onClick={onEffortHorizontalZoomIn} className="zoom-btn" disabled={effortHorizontalZoom >= 5} title="Effort Horizontal Zoom In (M)">
+                  <button onClick={onEffortHorizontalZoomIn} className="zoom-btn" disabled={effortHorizontalZoom >= 10} title="Effort Horizontal Zoom In (M)">
                     +
                   </button>
                   <button onClick={onEffortHorizontalZoomReset} className="zoom-reset-btn" title="Reset Effort Horizontal Zoom">
@@ -140,11 +140,11 @@ const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoom
               <div className="menu-section">
                 <h4>Clip Font Size</h4>
                 <div className="zoom-controls">
-                  <button onClick={onFontSizeDecrease} className="zoom-btn" title="Decrease font size">
+                  <button onClick={onFontSizeDecrease} className="zoom-btn" disabled={clipFontSize <= 8} title="Decrease font size">
                     A-
                   </button>
                   <span className="zoom-level">{clipFontSize}px</span>
-                  <button onClick={onFontSizeIncrease} className="zoom-btn" title="Increase font size">
+                  <button onClick={onFontSizeIncrease} className="zoom-btn" disabled={clipFontSize >= 48} title="Increase font size">
                     A+
                   </button>
                   <button onClick={onFontSizeReset} className="zoom-reset-btn" title="Reset font size">
@@ -155,6 +155,27 @@ const HamburgerMenu = ({ onFileProcessed, zoomLevel, onZoomIn, onZoomOut, onZoom
                   <span className="shortcut-hint">Shortcuts:</span>
                   <span className="key">-</span> <span className="key">+</span>
                 </div>
+              </div>
+              
+              <div className="menu-section">
+                <h4>Histogram Granularity</h4>
+                <div className="zoom-controls">
+                  <button onClick={onGranularityDecrease} className="zoom-btn" disabled={histogramGranularity <= 0.5} title="Decrease granularity (more bars)">
+                    -
+                  </button>
+                  <span className="zoom-level">{histogramGranularity}s</span>
+                  <button onClick={onGranularityIncrease} className="zoom-btn" disabled={histogramGranularity >= 10.0} title="Increase granularity (fewer bars)">
+                    +
+                  </button>
+                  <button onClick={onGranularityReset} className="zoom-reset-btn" title="Reset to 2 seconds">
+                    Reset
+                  </button>
+                </div>
+                <div className="keyboard-shortcuts">
+                  <span className="shortcut-hint">Shortcuts:</span>
+                  <span className="key">J</span> <span className="key">K</span>
+                </div>
+                <p className="granularity-info">Seconds per histogram bar (lower = more detail)</p>
               </div>
               
               <div className="menu-section">

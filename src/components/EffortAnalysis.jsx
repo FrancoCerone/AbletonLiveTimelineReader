@@ -15,7 +15,7 @@ import { getWebSocketUrl, WEBSOCKET_CONFIG } from '../config/websocket';
 import { smpteToTimelinePosition } from '../utils/timeConverter';
 import { getTimeRange } from '../utils/xmlParser';
 
-const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
+const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1, histogramGranularity = 2.0 }) => {
   // WebSocket connection for real-time time updates
   const { isConnected, smpteTime, currentBeats } = useWebSocket(
     getWebSocketUrl(), 
@@ -84,7 +84,17 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     
     const timeRange = getTimeRange(clips);
     const timeSpan = timeRange.max - timeRange.min;
-    const numDataPoints = Math.min(200, Math.max(50, Math.floor(timeSpan / 10))); // Adaptive number of points
+    const numDataPoints = Math.min(2000, Math.max(50, Math.floor(timeSpan / histogramGranularity))); // Configurable seconds per bar, max 2000 bars for performance
+    
+    // Debug log only when granularity changes significantly
+    if (numDataPoints > 500) {
+      console.log('High granularity detected:', {
+        timeSpan: timeSpan.toFixed(1) + 's',
+        configuredGranularity: histogramGranularity + 's',
+        numDataPoints: numDataPoints,
+        actualSecondsPerBar: (timeSpan / numDataPoints).toFixed(1) + 's'
+      });
+    }
     
     const dataPoints = [];
     
@@ -128,9 +138,9 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     }
     
     return dataPoints;
-  }, [clips]);
+  }, [clips, histogramGranularity]);
 
-  // Calculate cursor position based on time
+  // Calculate cursor position based on time with throttling
   const timeRange = useMemo(() => getTimeRange(clips), [clips]);
   const cursorTime = useMemo(() => {
     if (!smpteTime || !timeRange || clips.length === 0) {
@@ -151,8 +161,8 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     // Clamp time within range
     const finalTime = Math.max(timeRange.min, Math.min(timeRange.max, currentTime));
     
-
-    return finalTime;
+    // Round to nearest 0.1 seconds to reduce jitter
+    return Math.round(finalTime * 10) / 10;
   }, [smpteTime, currentBeats, timeRange, clips]);
 
   // Automatic scroll logic
@@ -199,15 +209,6 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     
     // Smooth scroll to new position
     if (Math.abs(newScrollLeft - currentScrollLeft) > 5) {
-      console.log('Auto-scroll:', {
-        cursorTime: cursorTime.toFixed(1),
-        cursorRelativePosition: cursorRelativePosition.toFixed(1),
-        leftThreshold: leftThreshold.toFixed(1),
-        rightThreshold: rightThreshold.toFixed(1),
-        currentScroll: currentScrollLeft.toFixed(1),
-        newScroll: newScrollLeft.toFixed(1)
-      });
-      
       scrollContainer.scrollTo({
         left: newScrollLeft,
         behavior: 'smooth'

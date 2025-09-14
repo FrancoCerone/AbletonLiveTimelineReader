@@ -203,13 +203,7 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1, clipFontSize = 
       }
     }
     
-    // Debug log for energy calculation
-    console.log('Energy Line Data (Track-based):', {
-      totalPoints: energyPoints.length,
-      timeRange: { min: timeRange.min, max: timeRange.max },
-      tracks: tracks.map(t => t.name),
-      samplePoints: energyPoints.slice(0, 5).map(p => ({ time: p.time.toFixed(1), energy: p.energy.toFixed(1) }))
-    });
+
     
     return energyPoints;
   }, [optimizedClips, timeRange, tracks, timeToPixel]);
