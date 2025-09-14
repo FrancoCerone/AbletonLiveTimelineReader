@@ -47,11 +47,66 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
   // Get tracks maintaining their original order from XML (trackIndex)
   const tracks = getUniqueTracks(clips);
   
+  // Optimize clips by merging consecutive clips with same name and track
+  const optimizedClips = useMemo(() => {
+    if (clips.length === 0) return [];
+    
+    // Group clips by track
+    const clipsByTrack = clips.reduce((acc, clip) => {
+      if (!acc[clip.track]) acc[clip.track] = [];
+      acc[clip.track].push(clip);
+      return acc;
+    }, {});
+    
+    const mergedClips = [];
+    
+    // Process each track
+    Object.entries(clipsByTrack).forEach(([trackName, trackClips]) => {
+      // Sort clips by start time
+      const sortedClips = trackClips.sort((a, b) => a.start - b.start);
+      
+      let currentClip = null;
+      
+      sortedClips.forEach(clip => {
+        if (!currentClip) {
+          // First clip in track
+          currentClip = { ...clip };
+        } else if (
+          currentClip.name === clip.name && 
+          currentClip.track === clip.track &&
+          Math.abs(currentClip.end - clip.start) < 0.1 // Allow small gap (0.1 seconds)
+        ) {
+          // Merge with previous clip (same name, same track, consecutive)
+          currentClip.end = clip.end;
+        } else {
+          // Different clip, save current and start new
+          mergedClips.push(currentClip);
+          currentClip = { ...clip };
+        }
+      });
+      
+      // Don't forget the last clip
+      if (currentClip) {
+        mergedClips.push(currentClip);
+      }
+    });
+    
+    // Debug log to show optimization results
+    console.log('Timeline Optimization:', {
+      originalClips: clips.length,
+      optimizedClips: mergedClips.length,
+      reduction: clips.length - mergedClips.length,
+      reductionPercentage: ((clips.length - mergedClips.length) / clips.length * 100).toFixed(1) + '%'
+    });
+    
+    return mergedClips;
+  }, [clips]);
+  
   // Memoize timeRange to prevent recalculation on every render
   const timeRange = useMemo(() => {
-    const range = getTimeRange(clips);
+    const range = getTimeRange(optimizedClips);
     return range;
-  }, [clips]);
+  }, [optimizedClips]);
   
   const timeSpan = timeRange.max - timeRange.min;
   
@@ -95,7 +150,8 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
   };
 
   return (
-
+    <div className="timeline-container">
+      {/* Timeline header with optimization info */}
 
       <div className="timeline-wrapper">
 
@@ -134,7 +190,7 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
                 </text>
                 
                 {/* Clips for this track */}
-                {clips
+                {optimizedClips
                   .filter(clip => clip.track === track.name)
                   .map((clip, clipIndex) => {
                     const x = timeToPixel(clip.start);
@@ -200,8 +256,7 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
           />
         </svg>
       </div>
-      
-
+    </div>
   );
 };
 
