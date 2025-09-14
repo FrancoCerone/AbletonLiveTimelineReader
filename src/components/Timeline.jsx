@@ -6,7 +6,7 @@ import { abletonColorToCSS, lightenColor } from '../utils/colorConverter';
 import TimelineCursor from './TimelineCursor';
 import './Timeline.css';
 
-const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
+const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1, clipFontSize = 24 }) => {
   // WebSocket connection for real-time time updates
   const { isConnected, smpteTime, currentBeats, error: wsError } = useWebSocket(
     getWebSocketUrl(), 
@@ -116,7 +116,10 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
   const baseWidth = Math.max(minWidth, timeSpan * 2); // 2 pixels per beat unit
   const timelineWidth = baseWidth * zoomLevel;
   const trackHeight = 35 * verticalZoom; // Apply vertical zoom to track height
-  const timelineHeight = tracks.length * trackHeight + 50; // Reduced header and padding
+  
+  // Energy line area height = total height of all tracks combined
+  const energyAreaHeight = tracks.length * trackHeight;
+  const timelineHeight = energyAreaHeight + tracks.length * trackHeight + 50; // Energy area + tracks + padding
   
   
   // Convert time to pixel position
@@ -149,6 +152,67 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
     return `${minutes}:${seconds.padStart(4, '0')}`;
   };
 
+  // Calculate energy line data based on clip colors and positions
+  const energyLineData = useMemo(() => {
+    if (optimizedClips.length === 0) return [];
+    
+    const timeSpan = timeRange.max - timeRange.min;
+    const numPoints = Math.min(200, Math.max(50, Math.floor(timeSpan / 2))); // Points every 2 seconds
+    const energyPoints = [];
+    
+    for (let i = 0; i < numPoints; i++) {
+      const timePosition = timeRange.min + (i / (numPoints - 1)) * timeSpan;
+      
+      // Find all clips active at this time position
+      const activeClips = optimizedClips.filter(clip => 
+        timePosition >= clip.start && timePosition <= clip.end
+      );
+      
+      if (activeClips.length > 0) {
+        // Calculate energy based on track positions (first track = high energy, last track = low energy)
+        let totalEnergy = 0;
+        let weightSum = 0;
+        
+        activeClips.forEach(clip => {
+          // Energy based on track position (first track = high energy, last track = low energy)
+          const trackIndex = tracks.findIndex(t => t.name === clip.track);
+          
+          if (trackIndex >= 0) {
+            // Invert the track index: first track (index 0) = highest energy, last track = lowest energy
+            const energyFromTrack = 100 - (trackIndex / (tracks.length - 1)) * 80; // Range from 100% to 20%
+            
+            totalEnergy += energyFromTrack;
+            weightSum += 1;
+          }
+        });
+        
+        const averageEnergy = weightSum > 0 ? totalEnergy / weightSum : 0;
+        energyPoints.push({
+          time: timePosition,
+          energy: averageEnergy,
+          x: timeToPixel(timePosition)
+        });
+      } else {
+        // No clips active, low energy
+        energyPoints.push({
+          time: timePosition,
+          energy: 10,
+          x: timeToPixel(timePosition)
+        });
+      }
+    }
+    
+    // Debug log for energy calculation
+    console.log('Energy Line Data (Track-based):', {
+      totalPoints: energyPoints.length,
+      timeRange: { min: timeRange.min, max: timeRange.max },
+      tracks: tracks.map(t => t.name),
+      samplePoints: energyPoints.slice(0, 5).map(p => ({ time: p.time.toFixed(1), energy: p.energy.toFixed(1) }))
+    });
+    
+    return energyPoints;
+  }, [optimizedClips, timeRange, tracks, timeToPixel]);
+
   return (
     <div className="timeline-container">
       {/* Timeline header with optimization info */}
@@ -160,14 +224,75 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
           height={timelineHeight}
           className="timeline-svg"
         >
+          {/* SVG filters for glow effect */}
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge> 
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
           {/* Dark background */}
           <rect width={timelineWidth} height={timelineHeight} fill="#1f2937" />
           
+          {/* Energy line area background */}
+          <rect 
+            x="0" y="5" 
+            width={timelineWidth} height={energyAreaHeight} 
+            fill="#111827" 
+            stroke="#374151" 
+            strokeWidth="1"
+            rx="2"
+          />
+          
+          {/* Energy line */}
+          {energyLineData.length > 1 && (
+            <g>
+              {/* Energy line path */}
+              <path
+                d={`M ${energyLineData.map(point => `${point.x},${5 + (100 - point.energy) * (energyAreaHeight - 10) / 100}`).join(' L ')}`}
+                fill="none"
+                stroke="#00ff88"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.8"
+              />
+              
+              {/* Energy line glow effect */}
+              <path
+                d={`M ${energyLineData.map(point => `${point.x},${5 + (100 - point.energy) * (energyAreaHeight - 10) / 100}`).join(' L ')}`}
+                fill="none"
+                stroke="#00ff88"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.3"
+                filter="url(#glow)"
+              />
+              
+              {/* Energy line dots */}
+              {energyLineData.map((point, index) => (
+                <circle
+                  key={index}
+                  cx={point.x}
+                  cy={5 + (100 - point.energy) * (energyAreaHeight - 10) / 100}
+                  r="2"
+                  fill="#00ff88"
+                  opacity="0.9"
+                />
+              ))}
+            </g>
+          )}
+          
+          {/* Energy scale labels */}
           {/* Time markers - removed for cleaner look */}
           
           {/* Track lanes */}
           {tracks.map((track) => {
-            const y = 25 + track.index * trackHeight; // Reduced starting position
+            const y = energyAreaHeight + 10 + track.index * trackHeight; // Position tracks below energy area
             return (
               <g key={track.name}>
                 {/* Track background - dark theme */}
@@ -216,17 +341,17 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
                         />
                         
                         {/* Clip name (if there's enough space) */}
-                        {width > 60 && (
+                        {width > Math.max(150, clipFontSize * 6) && (
                           <text
-                            x={x + 5}
+                            x={x + 12}
                             y={clipY + clipHeight/2}
-                            fontSize="9"
+                            fontSize={clipFontSize}
                             fill="#ffffff"
                             dominantBaseline="middle"
                             className="clip-text"
-                            style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
+                            style={{ textShadow: '2px 2px 6px rgba(0,0,0,0.9)', fontWeight: 'bold' }}
                           >
-                            {clip.name.length > 12 ? clip.name.substring(0, 12) + '...' : clip.name}
+                            {clip.name.length > Math.max(20, Math.floor(clipFontSize / 1.2)) ? clip.name.substring(0, Math.max(20, Math.floor(clipFontSize / 1.2))) + '...' : clip.name}
                           </text>
                         )}
                         
@@ -254,6 +379,37 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
             timelineHeight={timelineHeight}
             isVisible={true}
           />
+          
+          {/* Current energy indicator */}
+          {isConnected && smpteTime && energyLineData.length > 0 && (
+            (() => {
+              const currentTime = smpteTime.hours * 3600 + smpteTime.minutes * 60 + smpteTime.seconds;
+              const currentEnergyPoint = energyLineData.find(point => 
+                Math.abs(point.time - currentTime) < 1
+              ) || energyLineData[Math.floor(energyLineData.length / 2)];
+              
+              if (currentEnergyPoint) {
+                const energyY = 5 + (100 - currentEnergyPoint.energy) * (energyAreaHeight - 10) / 100;
+                const cursorX = timeToPixel(currentTime);
+                
+                return (
+                  <g>
+                    {/* Current energy value only - no vertical line */}
+                    <text
+                      x={cursorX + 8}
+                      y={energyY - 5}
+                      fontSize="10"
+                      fill="#00ff88"
+                      fontWeight="bold"
+                    >
+                      {Math.round(currentEnergyPoint.energy)}%
+                    </text>
+                  </g>
+                );
+              }
+              return null;
+            })()
+          )}
         </svg>
       </div>
     </div>
