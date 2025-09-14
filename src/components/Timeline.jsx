@@ -95,22 +95,10 @@ const Timeline = ({ clips = [], zoomLevel = 1 }) => {
   };
 
   return (
-    <div className="timeline-container">
-      
-      
-      {wsError && (
-        <div className="websocket-error">
-          <p>⚠️ WebSocket Error: {wsError}</p>
-          <p>Make sure the Ableton Live server is running on {getWebSocketUrl()}</p>
-        </div>
-      )}
-      
+
+
       <div className="timeline-wrapper">
-        {timelineWidth > 1200 && (
-          <div className="timeline-scroll-hint">
-            <span>📏 Timeline: {Math.round(timelineWidth)}px wide - Scroll horizontally to see all content</span>
-          </div>
-        )}
+
         <svg 
           width={timelineWidth + 200} 
           height={timelineHeight}
@@ -238,7 +226,6 @@ const Timeline = ({ clips = [], zoomLevel = 1 }) => {
       </div>
       
 
-    </div>
   );
 };
 

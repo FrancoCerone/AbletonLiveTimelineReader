@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import HamburgerMenu from './components/HamburgerMenu';
 import Timeline from './components/Timeline';
+import EffortAnalysis from './components/EffortAnalysis';
 import { parseAbletonXML } from './utils/xmlParser';
+import { mockClips, mockXML } from './utils/mockData';
 import { getFileFromStorage } from './utils/storage';
 import { loadFileFromPath } from './utils/fileLoader';
 import './App.css';
@@ -47,6 +49,13 @@ function App() {
   
   const handleZoomReset = () => {
     setZoomLevel(1);
+  };
+
+  const handleLoadMockData = () => {
+    setXmlContent(mockXML);
+    setClips(mockClips);
+    setParseError('');
+    setLoadedFileName('Mock Data');
   };
 
   // Auto-load file on app startup
@@ -155,11 +164,26 @@ function App() {
         
         {/* Timeline */}
         {clips.length > 0 ? (
-          <div className="timeline-container">
-            <Timeline clips={clips} zoomLevel={zoomLevel} />
-          </div>
+          <>
+            <div className="timeline-container">
+              <Timeline clips={clips} zoomLevel={zoomLevel} />
+            </div>
+            <EffortAnalysis clips={clips} />
+          </>
         ) : (
           <div className="welcome-screen">
+            <div className="welcome-content">
+              <h1>Ableton Live Timeline</h1>
+              <p>Click the menu button in the top-left corner to load a .als file</p>
+              <div className="welcome-actions">
+                <button 
+                  className="demo-button"
+                  onClick={handleLoadMockData}
+                >
+                  Try Demo Data
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
