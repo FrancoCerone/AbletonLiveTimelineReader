@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   ComposedChart,
   Bar,
@@ -21,6 +21,30 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     getWebSocketUrl(), 
     WEBSOCKET_CONFIG.CONNECTION_OPTIONS
   );
+
+  // Stable callback for tooltip
+  const CustomTooltip = useCallback(({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
+          <p className="text-white font-semibold">{data.name}</p>
+          <p className="text-gray-300">
+            <span className="text-blue-400">Effort:</span> {data.effort}% ({data.zone})
+          </p>
+          <p className="text-gray-300">
+            <span className="text-green-400">Time:</span> {data.time.toFixed(1)}s
+          </p>
+          {data.duration > 0 && (
+            <p className="text-gray-300">
+              <span className="text-yellow-400">Duration:</span> {data.duration.toFixed(1)}s
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  }, []);
 
   // Function to classify color into effort zones
   const classifyEffort = (color) => {
@@ -124,41 +148,10 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     // Clamp time within range
     const finalTime = Math.max(timeRange.min, Math.min(timeRange.max, currentTime));
     
-    // Debug log
-    console.log('EffortAnalysis Cursor:', {
-      smpteTime,
-      currentBeats,
-      currentTime,
-      timeRange,
-      finalTime
-    });
-    
+
     return finalTime;
   }, [smpteTime, currentBeats, timeRange, clips]);
 
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-semibold">{`${label}`}</p>
-          <p className="text-gray-300 text-sm">{`Clip: ${data.clipName}`}</p>
-          <p className="text-gray-300 text-sm">{`Track: ${data.track}`}</p>
-          <p className="text-gray-300 text-sm">{`Sforzo: ${data.effort}% (${data.zone})`}</p>
-          <p className="text-gray-300 text-sm">{`Durata: ${data.duration.toFixed(1)} beats`}</p>
-          <div className="flex items-center gap-2 mt-2">
-            <div 
-              className="w-4 h-4 rounded border border-gray-400"
-              style={{ backgroundColor: data.originalColor }}
-            ></div>
-            <span className="text-gray-300 text-sm">{data.originalColor}</span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
 
   if (clips.length === 0) {
@@ -192,8 +185,14 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
         </div>
         
         <div className="h-5/6">
-          <ResponsiveContainer width={`${100 * horizontalZoom}%`} height={1200 * zoomLevel} className="effort-chart-container">
+          <ResponsiveContainer 
+            key={`chart-${clips.length}-${zoomLevel}-${horizontalZoom}`}
+            width={`${100 * horizontalZoom}%`} 
+            height={1200 * zoomLevel} 
+            className="effort-chart-container"
+          >
             <ComposedChart
+              key={`composed-chart-${clips.length}`}
               data={chartData}
               margin={{
                 top: 30,
@@ -249,12 +248,14 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
                 domain={['dataMin', 'dataMax']}
                 tickFormatter={(value) => `${value.toFixed(0)}s`}
                 height={80}
+                isAnimationActive={false}
               />
               <YAxis 
                 stroke="#9ca3af"
                 fontSize={14}
                 domain={[0, 100]}
                 label={{ value: 'Sforzo (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9ca3af', fontSize: 16 } }}
+                isAnimationActive={false}
               />
               
               <Tooltip content={<CustomTooltip />} />
@@ -262,6 +263,7 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
               <Bar 
                 dataKey="effort" 
                 radius={[2, 2, 0, 0]}
+                isAnimationActive={false}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.originalColor} />
