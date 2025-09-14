@@ -5,7 +5,11 @@
 const STORAGE_KEYS = {
   FILE_PATH: 'ableton_file_path',
   FILE_NAME: 'ableton_file_name',
-  FILE_LAST_MODIFIED: 'ableton_file_last_modified'
+  FILE_LAST_MODIFIED: 'ableton_file_last_modified',
+  ZOOM_LEVEL: 'timeline_zoom_level',
+  TIMELINE_VERTICAL_ZOOM: 'timeline_vertical_zoom',
+  EFFORT_ZOOM_LEVEL: 'effort_zoom_level',
+  EFFORT_HORIZONTAL_ZOOM: 'effort_horizontal_zoom'
 };
 
 /**
@@ -79,5 +83,57 @@ export const isFileStillValid = async (filePath, savedLastModified) => {
   } catch (error) {
     console.error('Error checking file validity:', error);
     return false;
+  }
+};
+
+/**
+ * Save zoom values to localStorage
+ * @param {Object} zoomValues - Object containing all zoom values
+ */
+export const saveZoomValues = (zoomValues) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ZOOM_LEVEL, zoomValues.zoomLevel.toString());
+    localStorage.setItem(STORAGE_KEYS.TIMELINE_VERTICAL_ZOOM, zoomValues.timelineVerticalZoom.toString());
+    localStorage.setItem(STORAGE_KEYS.EFFORT_ZOOM_LEVEL, zoomValues.effortZoomLevel.toString());
+    localStorage.setItem(STORAGE_KEYS.EFFORT_HORIZONTAL_ZOOM, zoomValues.effortHorizontalZoom.toString());
+  } catch (error) {
+    console.error('Error saving zoom values to storage:', error);
+  }
+};
+
+/**
+ * Get saved zoom values from localStorage
+ * @returns {Object} Zoom values with defaults
+ */
+export const getZoomValues = () => {
+  try {
+    return {
+      zoomLevel: parseFloat(localStorage.getItem(STORAGE_KEYS.ZOOM_LEVEL)) || 1,
+      timelineVerticalZoom: parseFloat(localStorage.getItem(STORAGE_KEYS.TIMELINE_VERTICAL_ZOOM)) || 1,
+      effortZoomLevel: parseFloat(localStorage.getItem(STORAGE_KEYS.EFFORT_ZOOM_LEVEL)) || 1,
+      effortHorizontalZoom: parseFloat(localStorage.getItem(STORAGE_KEYS.EFFORT_HORIZONTAL_ZOOM)) || 1
+    };
+  } catch (error) {
+    console.error('Error getting zoom values from storage:', error);
+    return {
+      zoomLevel: 1,
+      timelineVerticalZoom: 1,
+      effortZoomLevel: 1,
+      effortHorizontalZoom: 1
+    };
+  }
+};
+
+/**
+ * Clear saved zoom values from localStorage
+ */
+export const clearZoomValues = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.ZOOM_LEVEL);
+    localStorage.removeItem(STORAGE_KEYS.TIMELINE_VERTICAL_ZOOM);
+    localStorage.removeItem(STORAGE_KEYS.EFFORT_ZOOM_LEVEL);
+    localStorage.removeItem(STORAGE_KEYS.EFFORT_HORIZONTAL_ZOOM);
+  } catch (error) {
+    console.error('Error clearing zoom values from storage:', error);
   }
 };

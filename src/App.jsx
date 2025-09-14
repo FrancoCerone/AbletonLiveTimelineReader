@@ -4,7 +4,7 @@ import Timeline from './components/Timeline';
 import EffortAnalysis from './components/EffortAnalysis';
 import { parseAbletonXML } from './utils/xmlParser';
 import { mockClips, mockXML } from './utils/mockData';
-import { getFileFromStorage } from './utils/storage';
+import { getFileFromStorage, saveZoomValues, getZoomValues } from './utils/storage';
 import { loadFileFromPath } from './utils/fileLoader';
 import './App.css';
 
@@ -15,10 +15,12 @@ function App() {
   const [parseError, setParseError] = useState('');
   const [loadedFileName, setLoadedFileName] = useState('');
   const [isAutoLoading, setIsAutoLoading] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [timelineVerticalZoom, setTimelineVerticalZoom] = useState(1);
-  const [effortZoomLevel, setEffortZoomLevel] = useState(1);
-  const [effortHorizontalZoom, setEffortHorizontalZoom] = useState(1);
+  // Load zoom values from localStorage or use defaults
+  const savedZoomValues = getZoomValues();
+  const [zoomLevel, setZoomLevel] = useState(savedZoomValues.zoomLevel);
+  const [timelineVerticalZoom, setTimelineVerticalZoom] = useState(savedZoomValues.timelineVerticalZoom);
+  const [effortZoomLevel, setEffortZoomLevel] = useState(savedZoomValues.effortZoomLevel);
+  const [effortHorizontalZoom, setEffortHorizontalZoom] = useState(savedZoomValues.effortHorizontalZoom);
 
   const handleFileProcessed = (xml, fileName = '') => {
     setXmlContent(xml);
@@ -123,6 +125,16 @@ function App() {
     autoLoadFile();
   }, []);
 
+  // Save zoom values to localStorage whenever they change
+  useEffect(() => {
+    saveZoomValues({
+      zoomLevel,
+      timelineVerticalZoom,
+      effortZoomLevel,
+      effortHorizontalZoom
+    });
+  }, [zoomLevel, timelineVerticalZoom, effortZoomLevel, effortHorizontalZoom]);
+
   // Keyboard shortcuts for zoom
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -176,7 +188,7 @@ function App() {
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, [zoomLevel]); // Include zoomLevel in dependencies to ensure functions have latest state
+  }, [zoomLevel, timelineVerticalZoom, effortZoomLevel, effortHorizontalZoom]); // Include all zoom levels in dependencies
 
   return (
     <div className="app">
