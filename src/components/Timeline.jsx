@@ -145,11 +145,12 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1, clipFontSize = 
     return '#808080';
   };
 
-  // Format time for display
+  // Format time for display (hh:mm:ss)
   const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = (time % 60).toFixed(1);
-    return `${minutes}:${seconds.padStart(4, '0')}`;
+    const hours = Math.floor(time / 3600);
+    const minutes = Math.floor((time % 3600) / 60);
+    const seconds = Math.floor(time % 60);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   // Calculate energy line data based on clip colors and positions
@@ -341,7 +342,7 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1, clipFontSize = 
                         />
                         
                         {/* Clip name (if there's enough space) */}
-                        {width > Math.max(150, clipFontSize * 6) && (
+                        {width > Math.max(80, clipFontSize * 3) && (
                           <text
                             x={x + 12}
                             y={clipY + clipHeight/2}
@@ -349,7 +350,7 @@ const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1, clipFontSize = 
                             fill="#ffffff"
                             dominantBaseline="middle"
                             className="clip-text"
-                            style={{ textShadow: '2px 2px 6px rgba(0,0,0,0.9)', fontWeight: 'bold' }}
+                            style={{ textShadow: '3px 3px 8px rgba(0,0,0,1)', fontWeight: 'bold', stroke: '#000000', strokeWidth: '0.5px' }}
                           >
                             {clip.name.length > Math.max(20, Math.floor(clipFontSize / 1.2)) ? clip.name.substring(0, Math.max(20, Math.floor(clipFontSize / 1.2))) + '...' : clip.name}
                           </text>

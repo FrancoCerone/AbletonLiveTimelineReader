@@ -229,9 +229,12 @@
 .clip-text {
   pointer-events: none;
   font-weight: bold;
-  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.9);
+  text-shadow: 3px 3px 8px rgba(0, 0, 0, 1);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   letter-spacing: 0.5px;
+  stroke: #000000;
+  stroke-width: 0.5px;
+  paint-order: stroke fill;
 }
 
 /* Legend */

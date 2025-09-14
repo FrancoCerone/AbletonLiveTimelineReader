@@ -227,32 +227,32 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     <div className="effort-analysis-container bg-gray-900 border-t border-gray-700">
       <div className="h-full p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-white text-lg font-semibold">
-            📊 Analisi Sforzo Fisico
-          </h3>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
             </div>
             {cursorTime !== null && (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-green-400 text-sm font-mono font-bold">
-                  {cursorTime.toFixed(1)}s
-                </span>
-              </div>
+                <div className="flex flex-col items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-green-400 text-2xl font-mono font-bold">
+        {(() => {
+          const totalSeconds = Math.floor(cursorTime);
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+
+          const pad = (num) => String(num).padStart(2, "0");
+          return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        })()}
+      </span>
+                  </div>
+                </div>
             )}
           </div>
         </div>
         
         <div className="h-5/6">
-          {/* Scroll indicator */}
-          {horizontalZoom > 1 && (
-            <div className="mb-2 p-2 bg-blue-900/30 border border-blue-500/30 rounded text-blue-300 text-sm">
-              📊 Chart zoomed in - Auto-scroll active (cursor follows at 25% position)
-            </div>
-          )}
-          
           <div className="effort-chart-scroll-container" ref={scrollContainerRef}>
             <ResponsiveContainer 
               key={`chart-${clips.length}-${zoomLevel}-${horizontalZoom}`}
@@ -278,36 +278,6 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
               <ReferenceLine y={90} stroke="#ff0000" strokeWidth={2} strokeDasharray="5 5" />
               <ReferenceLine y={95} stroke="#000000" strokeWidth={2} strokeDasharray="5 5" />
               
-              {/* Cursor line - Multiple approaches */}
-              {cursorTime !== null && (
-                <>
-                  {/* Main cursor line */}
-                  <ReferenceLine 
-                    x={cursorTime} 
-                    stroke="#00ff00" 
-                    strokeWidth={10}
-                    strokeDasharray="0"
-                    strokeOpacity={1}
-                  />
-                  {/* Secondary cursor line */}
-                  <ReferenceLine 
-                    x={cursorTime} 
-                    stroke="#ffffff" 
-                    strokeWidth={6}
-                    strokeDasharray="0"
-                    strokeOpacity={0.8}
-                  />
-                  {/* Cursor time indicator */}
-                  <ReferenceLine 
-                    x={cursorTime} 
-                    stroke="#00ff00" 
-                    strokeWidth={4}
-                    strokeDasharray="20 10"
-                    strokeOpacity={1}
-                    y={95}
-                  />
-                </>
-              )}
               
               <XAxis 
                 dataKey="time" 
@@ -338,6 +308,30 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
                   <Cell key={`cell-${index}`} fill={entry.originalColor} />
                 ))}
               </Bar>
+              
+              {/* Cursor line - Rendered AFTER bars to appear on top */}
+              {cursorTime !== null && (
+                <>
+                  {/* Main cursor line */}
+                  <ReferenceLine 
+                    x={cursorTime} 
+                    stroke="#00ff00" 
+                    strokeWidth={10}
+                    strokeDasharray="0"
+                    strokeOpacity={1}
+                    className="cursor-line"
+                  />
+                  {/* Secondary cursor line */}
+                  <ReferenceLine 
+                    x={cursorTime} 
+                    stroke="#ffffff" 
+                    strokeWidth={6}
+                    strokeDasharray="0"
+                    strokeOpacity={0.8}
+                    className="cursor-line"
+                  />
+                </>
+              )}
             </ComposedChart>
           </ResponsiveContainer>
           </div>
