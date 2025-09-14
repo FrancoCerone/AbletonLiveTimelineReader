@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   ComposedChart,
   Bar,
@@ -21,6 +21,9 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     getWebSocketUrl(), 
     WEBSOCKET_CONFIG.CONNECTION_OPTIONS
   );
+
+  // Ref for scroll container
+  const scrollContainerRef = useRef(null);
 
   // Stable callback for tooltip
   const CustomTooltip = useCallback(({ active, payload, label }) => {
@@ -152,7 +155,65 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
     return finalTime;
   }, [smpteTime, currentBeats, timeRange, clips]);
 
+  // Automatic scroll logic
+  useEffect(() => {
+    if (!cursorTime || !scrollContainerRef.current || !isConnected || horizontalZoom <= 1) {
+      return;
+    }
 
+    const scrollContainer = scrollContainerRef.current;
+    const containerWidth = scrollContainer.clientWidth;
+    const scrollWidth = scrollContainer.scrollWidth;
+    
+    // Only scroll if content is wider than container
+    if (scrollWidth <= containerWidth) {
+      return;
+    }
+
+    // Calculate cursor position relative to the chart
+    const timeRange = getTimeRange(clips);
+    const timeSpan = timeRange.max - timeRange.min;
+    const cursorPosition = ((cursorTime - timeRange.min) / timeSpan) * scrollWidth;
+    
+    // Calculate cursor position relative to visible area
+    const currentScrollLeft = scrollContainer.scrollLeft;
+    const cursorRelativePosition = cursorPosition - currentScrollLeft;
+    
+    // Calculate thresholds (25% and 75% of container width)
+    const leftThreshold = containerWidth * 0.25;
+    const rightThreshold = containerWidth * 0.75;
+    
+    // Determine if we need to scroll
+    let newScrollLeft = currentScrollLeft;
+    
+    if (cursorRelativePosition < leftThreshold) {
+      // Cursor is too far left, scroll to put it at 25%
+      newScrollLeft = cursorPosition - leftThreshold;
+    } else if (cursorRelativePosition > rightThreshold) {
+      // Cursor is too far right, scroll to put it at 25%
+      newScrollLeft = cursorPosition - leftThreshold;
+    }
+    
+    // Clamp scroll position
+    newScrollLeft = Math.max(0, Math.min(newScrollLeft, scrollWidth - containerWidth));
+    
+    // Smooth scroll to new position
+    if (Math.abs(newScrollLeft - currentScrollLeft) > 5) {
+      console.log('Auto-scroll:', {
+        cursorTime: cursorTime.toFixed(1),
+        cursorRelativePosition: cursorRelativePosition.toFixed(1),
+        leftThreshold: leftThreshold.toFixed(1),
+        rightThreshold: rightThreshold.toFixed(1),
+        currentScroll: currentScrollLeft.toFixed(1),
+        newScroll: newScrollLeft.toFixed(1)
+      });
+      
+      scrollContainer.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  }, [cursorTime, isConnected, horizontalZoom, clips]);
 
   if (clips.length === 0) {
     return (
@@ -185,12 +246,20 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
         </div>
         
         <div className="h-5/6">
-          <ResponsiveContainer 
-            key={`chart-${clips.length}-${zoomLevel}-${horizontalZoom}`}
-            width={`${100 * horizontalZoom}%`} 
-            height={1200 * zoomLevel} 
-            className="effort-chart-container"
-          >
+          {/* Scroll indicator */}
+          {horizontalZoom > 1 && (
+            <div className="mb-2 p-2 bg-blue-900/30 border border-blue-500/30 rounded text-blue-300 text-sm">
+              📊 Chart zoomed in - Auto-scroll active (cursor follows at 25% position)
+            </div>
+          )}
+          
+          <div className="effort-chart-scroll-container" ref={scrollContainerRef}>
+            <ResponsiveContainer 
+              key={`chart-${clips.length}-${zoomLevel}-${horizontalZoom}`}
+              width={`${100 * horizontalZoom}%`} 
+              height={1200 * zoomLevel} 
+              className="effort-chart-container"
+            >
             <ComposedChart
               key={`composed-chart-${clips.length}`}
               data={chartData}
@@ -271,6 +340,7 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
               </Bar>
             </ComposedChart>
           </ResponsiveContainer>
+          </div>
         </div>
         
 
