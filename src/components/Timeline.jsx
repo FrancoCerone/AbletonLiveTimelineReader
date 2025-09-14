@@ -60,8 +60,8 @@ const Timeline = ({ clips = [], zoomLevel = 1 }) => {
   const minWidth = 1200;
   const baseWidth = Math.max(minWidth, timeSpan * 2); // 2 pixels per beat unit
   const timelineWidth = baseWidth * zoomLevel;
-  const trackHeight = 60;
-  const timelineHeight = tracks.length * trackHeight + 100; // +100 for header and padding
+  const trackHeight = 35; // Reduced height for more compact view
+  const timelineHeight = tracks.length * trackHeight + 50; // Reduced header and padding
   
   
   // Convert time to pixel position
@@ -104,55 +104,30 @@ const Timeline = ({ clips = [], zoomLevel = 1 }) => {
           height={timelineHeight}
           className="timeline-svg"
         >
-          {/* Time grid */}
-          <defs>
-            <pattern id="timeGrid" patternUnits="userSpaceOnUse" width="100" height={timelineHeight}>
-              <line x1="0" y1="0" x2="0" y2={timelineHeight} stroke="#e0e0e0" strokeWidth="1"/>
-            </pattern>
-          </defs>
-          <rect width={timelineWidth} height={timelineHeight} fill="url(#timeGrid)" />
+          {/* Dark background */}
+          <rect width={timelineWidth} height={timelineHeight} fill="#1f2937" />
           
-          {/* Time markers */}
-          {Array.from({ length: Math.ceil(timeSpan / 10) + 1 }, (_, i) => {
-            const time = timeRange.min + (i * 10);
-            const x = timeToPixel(time);
-            return (
-              <g key={i}>
-                <line 
-                  x1={x} y1="0" x2={x} y2={timelineHeight} 
-                  stroke="#ccc" strokeWidth="1"
-                />
-                <text 
-                  x={x} y="15" 
-                  textAnchor="middle" 
-                  fontSize="10" 
-                  fill="#666"
-                >
-                  {formatTime(time)}
-                </text>
-              </g>
-            );
-          })}
+          {/* Time markers - removed for cleaner look */}
           
           {/* Track lanes */}
           {tracks.map((track) => {
-            const y = 40 + track.index * trackHeight;
+            const y = 25 + track.index * trackHeight; // Reduced starting position
             return (
               <g key={track.name}>
-                {/* Track background */}
+                {/* Track background - dark theme */}
                 <rect 
                   x="0" y={y} 
-                  width={timelineWidth} height={trackHeight - 10} 
-                  fill={track.index % 2 === 0 ? "#f8f8f8" : "#ffffff"}
-                  stroke="#ddd" strokeWidth="1"
+                  width={timelineWidth} height={trackHeight - 5} 
+                  fill={track.index % 2 === 0 ? "#374151" : "#4b5563"}
+                  stroke="#6b7280" strokeWidth="0.5"
                 />
                 
                 {/* Track label */}
                 <text 
                   x="-10" y={y + trackHeight/2} 
                   textAnchor="end" 
-                  fontSize="12" 
-                  fill="#333"
+                  fontSize="11" 
+                  fill="#d1d5db"
                   dominantBaseline="middle"
                 >
                   {track.name}
@@ -164,8 +139,8 @@ const Timeline = ({ clips = [], zoomLevel = 1 }) => {
                   .map((clip, clipIndex) => {
                     const x = timeToPixel(clip.start);
                     const width = durationToPixel(clip.end - clip.start);
-                    const clipY = y + 5;
-                    const clipHeight = trackHeight - 20;
+                    const clipY = y + 3; // Reduced padding
+                    const clipHeight = trackHeight - 8; // More compact clips
                     
 
                     
@@ -189,12 +164,13 @@ const Timeline = ({ clips = [], zoomLevel = 1 }) => {
                           <text
                             x={x + 5}
                             y={clipY + clipHeight/2}
-                            fontSize="10"
-                            fill="#000"
+                            fontSize="9"
+                            fill="#ffffff"
                             dominantBaseline="middle"
                             className="clip-text"
+                            style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
                           >
-                            {clip.name.length > 15 ? clip.name.substring(0, 15) + '...' : clip.name}
+                            {clip.name.length > 12 ? clip.name.substring(0, 12) + '...' : clip.name}
                           </text>
                         )}
                         
