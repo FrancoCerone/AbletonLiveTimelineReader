@@ -16,6 +16,9 @@ function App() {
   const [loadedFileName, setLoadedFileName] = useState('');
   const [isAutoLoading, setIsAutoLoading] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [timelineVerticalZoom, setTimelineVerticalZoom] = useState(1);
+  const [effortZoomLevel, setEffortZoomLevel] = useState(1);
+  const [effortHorizontalZoom, setEffortHorizontalZoom] = useState(1);
 
   const handleFileProcessed = (xml, fileName = '') => {
     setXmlContent(xml);
@@ -49,6 +52,45 @@ function App() {
   
   const handleZoomReset = () => {
     setZoomLevel(1);
+  };
+
+  // Timeline vertical zoom functions
+  const handleTimelineVerticalZoomIn = () => {
+    setTimelineVerticalZoom(prev => Math.min(prev * 1.2, maxZoom));
+  };
+  
+  const handleTimelineVerticalZoomOut = () => {
+    setTimelineVerticalZoom(prev => Math.max(prev / 1.2, minZoom));
+  };
+  
+  const handleTimelineVerticalZoomReset = () => {
+    setTimelineVerticalZoom(1);
+  };
+
+  // Effort chart zoom functions
+  const handleEffortZoomIn = () => {
+    setEffortZoomLevel(prev => Math.min(prev * 1.2, maxZoom));
+  };
+  
+  const handleEffortZoomOut = () => {
+    setEffortZoomLevel(prev => Math.max(prev / 1.2, minZoom));
+  };
+  
+  const handleEffortZoomReset = () => {
+    setEffortZoomLevel(1);
+  };
+
+  // Effort chart horizontal zoom functions
+  const handleEffortHorizontalZoomIn = () => {
+    setEffortHorizontalZoom(prev => Math.min(prev * 1.2, maxZoom));
+  };
+  
+  const handleEffortHorizontalZoomOut = () => {
+    setEffortHorizontalZoom(prev => Math.max(prev / 1.2, minZoom));
+  };
+  
+  const handleEffortHorizontalZoomReset = () => {
+    setEffortHorizontalZoom(1);
   };
 
   const handleLoadMockData = () => {
@@ -98,6 +140,30 @@ function App() {
           event.preventDefault();
           handleZoomIn();
           break;
+        case 'd':
+          event.preventDefault();
+          handleTimelineVerticalZoomOut();
+          break;
+        case 'f':
+          event.preventDefault();
+          handleTimelineVerticalZoomIn();
+          break;
+        case 'v':
+          event.preventDefault();
+          handleEffortZoomOut();
+          break;
+        case 'b':
+          event.preventDefault();
+          handleEffortZoomIn();
+          break;
+        case 'n':
+          event.preventDefault();
+          handleEffortHorizontalZoomOut();
+          break;
+        case 'm':
+          event.preventDefault();
+          handleEffortHorizontalZoomIn();
+          break;
         default:
           break;
       }
@@ -121,6 +187,18 @@ function App() {
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onZoomReset={handleZoomReset}
+        timelineVerticalZoom={timelineVerticalZoom}
+        onTimelineVerticalZoomIn={handleTimelineVerticalZoomIn}
+        onTimelineVerticalZoomOut={handleTimelineVerticalZoomOut}
+        onTimelineVerticalZoomReset={handleTimelineVerticalZoomReset}
+        effortZoomLevel={effortZoomLevel}
+        onEffortZoomIn={handleEffortZoomIn}
+        onEffortZoomOut={handleEffortZoomOut}
+        onEffortZoomReset={handleEffortZoomReset}
+        effortHorizontalZoom={effortHorizontalZoom}
+        onEffortHorizontalZoomIn={handleEffortHorizontalZoomIn}
+        onEffortHorizontalZoomOut={handleEffortHorizontalZoomOut}
+        onEffortHorizontalZoomReset={handleEffortHorizontalZoomReset}
       />
       
       {/* Auto-loading indicator */}
@@ -143,14 +221,7 @@ function App() {
           </div>
         )}
         
-        {/* Keyboard shortcuts indicator */}
-        {clips.length > 0 && (
-          <div className="keyboard-shortcuts-indicator">
-            <span className="shortcut-text">
-              <span className="key">G</span> Zoom Out • <span className="key">H</span> Zoom In
-            </span>
-          </div>
-        )}
+
         
         {/* Error message */}
         {parseError && (
@@ -166,9 +237,9 @@ function App() {
         {clips.length > 0 ? (
           <>
             <div className="timeline-container">
-              <Timeline clips={clips} zoomLevel={zoomLevel} />
+              <Timeline clips={clips} zoomLevel={zoomLevel} verticalZoom={timelineVerticalZoom} />
             </div>
-            <EffortAnalysis clips={clips} />
+            <EffortAnalysis clips={clips} zoomLevel={effortZoomLevel} horizontalZoom={effortHorizontalZoom} />
           </>
         ) : (
           <div className="welcome-screen">

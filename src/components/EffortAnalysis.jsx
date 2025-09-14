@@ -15,7 +15,7 @@ import { getWebSocketUrl, WEBSOCKET_CONFIG } from '../config/websocket';
 import { smpteToTimelinePosition } from '../utils/timeConverter';
 import { getTimeRange } from '../utils/xmlParser';
 
-const EffortAnalysis = ({ clips = [] }) => {
+const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1 }) => {
   // WebSocket connection for real-time time updates
   const { isConnected, smpteTime, currentBeats } = useWebSocket(
     getWebSocketUrl(), 
@@ -192,7 +192,7 @@ const EffortAnalysis = ({ clips = [] }) => {
         </div>
         
         <div className="h-5/6">
-          <ResponsiveContainer width="100%" height={600}>
+          <ResponsiveContainer width={`${100 * horizontalZoom}%`} height={1200 * zoomLevel} className="effort-chart-container">
             <ComposedChart
               data={chartData}
               margin={{

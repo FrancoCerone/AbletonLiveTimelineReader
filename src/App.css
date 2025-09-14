@@ -184,6 +184,11 @@ body {
   overflow: hidden;
 }
 
+/* Effort chart height - doubled */
+.effort-chart-container {
+  height: 1200px; /* Doubled from 600px */
+}
+
 /* Cursor animation for effort chart */
 @keyframes cursorPulse {
   0%, 100% { 

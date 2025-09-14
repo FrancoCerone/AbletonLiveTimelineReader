@@ -6,7 +6,7 @@ import { abletonColorToCSS, lightenColor } from '../utils/colorConverter';
 import TimelineCursor from './TimelineCursor';
 import './Timeline.css';
 
-const Timeline = ({ clips = [], zoomLevel = 1 }) => {
+const Timeline = ({ clips = [], zoomLevel = 1, verticalZoom = 1 }) => {
   // WebSocket connection for real-time time updates
   const { isConnected, smpteTime, currentBeats, error: wsError } = useWebSocket(
     getWebSocketUrl(), 
@@ -60,7 +60,7 @@ const Timeline = ({ clips = [], zoomLevel = 1 }) => {
   const minWidth = 1200;
   const baseWidth = Math.max(minWidth, timeSpan * 2); // 2 pixels per beat unit
   const timelineWidth = baseWidth * zoomLevel;
-  const trackHeight = 35; // Reduced height for more compact view
+  const trackHeight = 35 * verticalZoom; // Apply vertical zoom to track height
   const timelineHeight = tracks.length * trackHeight + 50; // Reduced header and padding
   
   
