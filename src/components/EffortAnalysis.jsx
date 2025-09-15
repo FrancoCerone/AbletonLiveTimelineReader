@@ -102,7 +102,9 @@ const EffortAnalysis = ({ clips = [], zoomLevel = 1, horizontalZoom = 1, histogr
       const timePosition = timeRange.min + (i / (numDataPoints - 1)) * timeSpan;
       
       // Find which clip is active at this time position
-      const activeClip = clips.find(clip => timePosition >= clip.start && timePosition <= clip.end);
+      const activeClip = clips
+      .filter(clip => timePosition >= clip.start && timePosition <= clip.end)
+      .sort((a, b) => b.end - a.end)[0];
       
       if (activeClip) {
         const effortData = classifyEffort(activeClip.color);
